@@ -1,0 +1,128 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
+@inject HttpClient httpClient
+@inject IWebAssemblyHostEnvironment hostEnv
+@inject IConfiguration config
+@inject ILogger<Home> logger
+
+
+
+<PageTitle>Home</PageTitle>
+
+<div class="row-cols-2">
+  <div class="col">
+    <h2>All Tasks</h2>
+    <div class="input-group">
+      <input type="text" class="form-control m-1" placeholder="Enter Task" @bind="newTask" />
+      <button type="button" class="btn btn-success" @onclick="AddTask">
+        <i class="bi bi-plus-circle-fill"></i>
+      </button>
+    </div>
+    <div class="mt-3 ">
+      @if (tasks is null)
+      {
+        <span>Loading....</span>
+      }
+      else if (tasks.Count() < 0)
+      {
+        <span>Not programmed task.</span>
+      }
+      else
+      {
+
+        @foreach (var task in tasks)
+        {
+          <div class="d-flex  mx-auto border-bottom" @key="task">
+            <div class="p-2 flex-fill">
+              <input type="checkbox" checked="@task.IsComplete" @onchange="@(()=>ToggleTaskStatus(task))" />
+              <span class="@((task.IsComplete? "completed-task" : ""))">
+                @task.TaskName
+              </span>
+            </div>
+            <div class="p-1">
+              <button type="button" class="btn btn-outline-danger btn-sm" title="Delete task"
+                @onclick="@(()=>DeleteTask(task))">
+                <span class="bi bi-trash"></span>
+              </button>
+            </div>
+          </div>
+        }
+
+      }
+    </div>
+  </div>
+</div>
+
+@if (error is not null)
+{
+  <div class="alert alert-danger">@error?.ToString()</div>
+}
+
+
+
+@code {
+
+  private IList<TaskItemReadDto>? tasks;
+  string newTask;
+
+  private string? error;
+
+  string baseUrl = "http://localhost:5261";
+  string taskEndpoint = "/api/taskitems";
+
+  protected override async Task OnInitializedAsync()
+  {
+    await FetchTask();
+    var result = config["PATH"];
+    logger.LogInformation("information==>{0}", result);
+
+    await base.OnInitializedAsync();
+  }
+
+
+  async Task FetchTask()
+  {
+    try { tasks = await httpClient.GetFromJsonAsync<IList<TaskItemReadDto>>($"{baseUrl}{taskEndpoint}"); }
+    catch (Exception) { error = "Error occurs"; };
+  }
+
+  async Task ToggleTaskStatus(TaskItemReadDto item)
+  {
+    var copyItem = item;
+    copyItem.IsComplete = !item.IsComplete;
+    var response = await httpClient.PutAsJsonAsync<TaskItemReadDto>($"{baseUrl}{taskEndpoint}/{copyItem.Id}", copyItem);
+    if (!response.IsSuccessStatusCode)
+    {
+      error = $"{response.ReasonPhrase} - {response.StatusCode.ToString()}";
+      return;
+    }
+    item.IsComplete = copyItem.IsComplete;
+  }
+
+  async Task DeleteTask(TaskItemReadDto item)
+  {
+    var response = await httpClient.DeleteAsync($"{baseUrl}{taskEndpoint}/{item.Id}");
+    if (!response.IsSuccessStatusCode)
+    {
+      error = $"{response.ReasonPhrase} - {response.StatusCode.ToString()}";
+      return;
+    }
+    tasks.Remove(item);
+  }
+  async Task AddTask()
+  {
+    if (String.IsNullOrWhiteSpace(newTask))
+      return;
+    var itemdto = new TaskItemCreateDto() { TaskName = newTask };
+    try { var response = await httpClient.PostAsJsonAsync<TaskItemCreateDto>($"{baseUrl}{taskEndpoint}", itemdto); 
+      if (!response.IsSuccessStatusCode)
+      {
+        error = response.ReasonPhrase;
+        return;
+      }
+      newTask = string.Empty;
+      await FetchTask();
+    }
+    catch (Exception) { }
+  }
+}
