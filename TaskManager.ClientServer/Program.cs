@@ -1,10 +1,16 @@
 using TaskManager.ClientServer.Components;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
+    .AddInteractiveWebAssemblyComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpClient("backendApi", options => {
+    options.BaseAddress=new Uri("");
+ });
 
 var app = builder.Build();
 
@@ -22,6 +28,8 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
+    .AddInteractiveWebAssemblyRenderMode()
     .AddInteractiveServerRenderMode();
+    // .AddAdditionalAssemblies(typeof()._Imports);
 
 app.Run();

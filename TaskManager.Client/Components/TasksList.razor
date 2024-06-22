@@ -1,13 +1,10 @@
-﻿@page "/"
+﻿
 @using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject HttpClient httpClient
-@inject IWebAssemblyHostEnvironment hostEnv
-@inject IConfiguration config
-@inject ILogger<Home> logger
+@inject ILogger<TasksList> logger
 
 
 
-<PageTitle>Home</PageTitle>
 
 <div class="row-cols-2">
   <div class="col">
@@ -73,8 +70,6 @@
   protected override async Task OnInitializedAsync()
   {
     await FetchTask();
-    var result = config["PATH"];
-    logger.LogInformation("information==>{0}", result);
 
     await base.OnInitializedAsync();
   }

@@ -2,6 +2,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TaskManager.Shared\TaskManager.Shared.csproj" />
+    <ProjectReference Include="..\TaskManager.Client\TaskManager.Client.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.6" />
   </ItemGroup>
 
   <PropertyGroup>

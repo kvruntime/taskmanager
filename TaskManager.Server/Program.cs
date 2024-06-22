@@ -11,7 +11,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddCors(options =>{
     options.AddPolicy("addApi", policy=>{
-        policy.WithOrigins("http://localhost:5062");
+        policy.WithOrigins("http://localhost:5282");
         policy.AllowAnyMethod();
         policy.AllowAnyHeader();
         policy.AllowCredentials();

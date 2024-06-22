@@ -102,7 +102,3 @@ code {
     color: #c02d76;
 }
 
-/* Task */
-.completed-task {
-text-decoration: line-through;
-}
