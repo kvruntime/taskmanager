@@ -1,13 +1,5 @@
-﻿@page "/"
-@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
-@inject HttpClient httpClient
-@inject IWebAssemblyHostEnvironment hostEnv
-@inject IConfiguration config
-@inject ILogger<Home> logger
+﻿@inject ILogger<TasksList> logger
 
-
-
-<PageTitle>Home</PageTitle>
 
 <div class="row-cols-2">
   <div class="col">
@@ -67,14 +59,14 @@
 
   private string? error;
 
-  string baseUrl = "http://localhost:5261";
   string taskEndpoint = "/api/taskitems";
+
+  [Parameter]
+  public HttpClient httpClient { get; set; }
 
   protected override async Task OnInitializedAsync()
   {
     await FetchTask();
-    var result = config["PATH"];
-    logger.LogInformation("information==>{0}", result);
 
     await base.OnInitializedAsync();
   }
@@ -82,7 +74,7 @@
 
   async Task FetchTask()
   {
-    try { tasks = await httpClient.GetFromJsonAsync<IList<TaskItemReadDto>>($"{baseUrl}{taskEndpoint}"); }
+    try { tasks = await httpClient.GetFromJsonAsync<IList<TaskItemReadDto>>($"{taskEndpoint}"); }
     catch (Exception) { error = "Error occurs"; };
   }
 
@@ -90,7 +82,7 @@
   {
     var copyItem = item;
     copyItem.IsComplete = !item.IsComplete;
-    var response = await httpClient.PutAsJsonAsync<TaskItemReadDto>($"{baseUrl}{taskEndpoint}/{copyItem.Id}", copyItem);
+    var response = await httpClient.PutAsJsonAsync<TaskItemReadDto>($"{taskEndpoint}/{copyItem.Id}", copyItem);
     if (!response.IsSuccessStatusCode)
     {
       error = $"{response.ReasonPhrase} - {response.StatusCode.ToString()}";
@@ -101,7 +93,7 @@
 
   async Task DeleteTask(TaskItemReadDto item)
   {
-    var response = await httpClient.DeleteAsync($"{baseUrl}{taskEndpoint}/{item.Id}");
+    var response = await httpClient.DeleteAsync($"{taskEndpoint}/{item.Id}");
     if (!response.IsSuccessStatusCode)
     {
       error = $"{response.ReasonPhrase} - {response.StatusCode.ToString()}";
@@ -109,12 +101,15 @@
     }
     tasks.Remove(item);
   }
+
   async Task AddTask()
   {
     if (String.IsNullOrWhiteSpace(newTask))
       return;
     var itemdto = new TaskItemCreateDto() { TaskName = newTask };
-    try { var response = await httpClient.PostAsJsonAsync<TaskItemCreateDto>($"{baseUrl}{taskEndpoint}", itemdto); 
+    try
+    {
+      var response = await httpClient.PostAsJsonAsync<TaskItemCreateDto>($"{taskEndpoint}", itemdto);
       if (!response.IsSuccessStatusCode)
       {
         error = response.ReasonPhrase;

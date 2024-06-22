@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine as build
+WORKDIR /app
+COPY *.sln .
+COPY TaskManager.Shared/*.csproj TaskManager.Shared/
+COPY TaskManager.Server/*.csproj TaskManager.Server/
+RUN dotnet restore TaskManager.Server/
+COPY TaskManager.Server/ TaskManager.Server/
+COPY TaskManager.Shared/ TaskManager.Shared/
+RUN dotnet publish TaskManager.Server/ -c release -o ./out
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine as prod
+WORKDIR /app
+ENV ALLOWED_URLS=http://localhost:5282;
+COPY --from=build /app/out/ .
+ENV ASPNETCORE_HTTP_PORTS=8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 8080
+EXPOSE 8080
+CMD [ "dotnet", "TaskManager.Server.dll", "--RunMigrations" ]
