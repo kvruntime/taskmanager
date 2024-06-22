@@ -1,0 +1,20 @@
+networks:
+  appnet:
+    name: appnet
+services:
+  web:
+    image: taskmanagerweb:dev
+    networks:
+      - appnet
+    ports:
+      - 60000:8080
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - ASPNETCORE_ENVIRONMENT=Development
+  backend:
+    image: taskmanagerserver:dev
+    networks:
+      - appnet
+    environment:
+      - ALLOWED_URLS=http://web:8080
+      

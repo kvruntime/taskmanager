@@ -12,5 +12,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine as prod
 WORKDIR /app
 ENV ALLOWED_URLS=http://localhost:5282;
 COPY --from=build /app/out/ .
+ENV ASPNETCORE_HTTP_PORTS=8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+EXPOSE 8080
 EXPOSE 8080
 CMD [ "dotnet", "TaskManager.Server.dll", "--RunMigrations" ]

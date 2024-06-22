@@ -1,30 +1,53 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using TaskManager.Server.Data;
 using TaskManager.Server.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+var allowedUrls = builder.Configuration["ALLOWED_URLS"] ?? "";
+Console.WriteLine(allowedUrls);
 
-builder.Services.AddCors(options =>{
-    options.AddPolicy("addApi", policy=>{
-        policy.WithOrigins("http://localhost:5282");
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("addApi", policy =>
+    {
+        policy.WithOrigins(allowedUrls?.Split(";"));
         policy.AllowAnyMethod();
         policy.AllowAnyHeader();
         policy.AllowCredentials();
     });
 });
 
+// if (args.ToList().Contains("--RunMigrations"))
+// {
+//     var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=./sqlite.db");
+//     await using var dbContext = new AppDbContext(optionsBuilder.Options);
+//     await dbContext.Database.MigrateAsync();
+// }
+
 builder.Services.AddDbContext<AppDbContext>(options =>
 options.UseSqlite("Data Source=./sqlite.db"));
+
 
 builder.Services.AddScoped<IDbStore, DbStore>();
 
 
 var app = builder.Build();
+
+if (args.ToList().Contains("--RunMigrations"))
+{
+    using var scope = app.Services.CreateScope();
+    await using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -8,9 +8,13 @@ builder.Services.AddRazorComponents()
     .AddInteractiveWebAssemblyComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddHttpClient("backendApi", options => {
-    options.BaseAddress=new Uri("");
- });
+var backendUrl = builder.Configuration["BACKEND_URL"] ?? throw new NullReferenceException("BACKEND_URL must be provided");
+
+builder.Services.AddHttpClient("backendApi", client =>
+{
+    // client.BaseAddress = new Uri(backendUrl, UriKind.RelativeOrAbsolute);
+    client.BaseAddress = new Uri(backendUrl);
+});
 
 var app = builder.Build();
 
@@ -30,6 +34,6 @@ app.UseAntiforgery();
 app.MapRazorComponents<App>()
     .AddInteractiveWebAssemblyRenderMode()
     .AddInteractiveServerRenderMode();
-    // .AddAdditionalAssemblies(typeof()._Imports);
+// .AddAdditionalAssemblies(typeof(TaskManager.)._Imports);
 
 app.Run();

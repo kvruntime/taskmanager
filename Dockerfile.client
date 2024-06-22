@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine as build
+WORKDIR /app
+COPY *.sln .
+COPY TaskManager.Shared/*.csproj TaskManager.Shared/
+COPY TaskManager.Client/*.csproj TaskManager.Client/
+COPY TaskManager.ClientServer/*.csproj TaskManager.ClientServer/
+RUN dotnet restore TaskManager.ClientServer/
+COPY TaskManager.ClientServer/ TaskManager.ClientServer/
+COPY TaskManager.Client/ TaskManager.Client/
+COPY TaskManager.Shared/ TaskManager.Shared/
+RUN dotnet publish TaskManager.ClientServer/ -c release -o ./out
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine as prod
+WORKDIR /app
+ENV ASPNETCORE_HTTP_PORTS=8080
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV BACKEND_URL=http://localhost
+COPY --from=build /app/out/ .
+EXPOSE 8080
+CMD [ "dotnet", "TaskManager.ClientServer.dll" ]
